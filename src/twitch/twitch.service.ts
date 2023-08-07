@@ -4,13 +4,13 @@ import { ChannelInfo } from './interfaces/channel-info.interface';
 
 @Injectable()
 export class TwitchService {
-  accessToken: string = '';
+  private accessToken: string = '';
 
   constructor() {
     this.refreshAccessToken();
   }
 
-  async refreshAccessToken() {
+  private async refreshAccessToken() {
     const url = `https://id.twitch.tv/oauth2/token?client_id=${process.env.CLIENT_ID}&client_secret=${process.env.CLIENT_SECRET}&grant_type=client_credentials`;
 
     try {
