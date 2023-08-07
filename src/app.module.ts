@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { IntentsBitField } from 'discord.js';
 import { NecordModule } from 'necord';
+import { TwitchModule } from './twitch/twitch.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { NecordModule } from 'necord';
       ],
       development: [process.env.GUILD_ID],
     }),
+    TwitchModule,
   ],
 })
 export class AppModule {}
