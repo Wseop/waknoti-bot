@@ -10,5 +10,5 @@ export class ChannelInfo {
   tags: string[];
   thumbnail_url: string;
   title: string;
-  started_at: Date;
+  started_at: string;
 }

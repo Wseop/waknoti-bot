@@ -30,24 +30,28 @@ export class TwitchService {
   async searchChannel(broadcasterLogin: string): Promise<ChannelInfo> {
     const url = `https://api.twitch.tv/helix/search/channels?query=${broadcasterLogin}&live_only=true`;
 
-    try {
-      const result = await axios.get(url, {
-        headers: {
-          Authorization: `Bearer ${this.accessToken}`,
-          'Client-Id': process.env.CLIENT_ID,
-        },
-      });
-
-      let channel: ChannelInfo = null;
-      if (result?.data?.data?.length > 0) {
-        result.data.data.forEach((value: ChannelInfo) => {
-          if (value.broadcaster_login === broadcasterLogin) channel = value;
+    if (this.accessToken) {
+      try {
+        const result = await axios.get(url, {
+          headers: {
+            Authorization: `Bearer ${this.accessToken}`,
+            'Client-Id': process.env.CLIENT_ID,
+          },
         });
+
+        let channel: ChannelInfo = null;
+        if (result?.data?.data?.length > 0) {
+          result.data.data.forEach((value: ChannelInfo) => {
+            if (value.broadcaster_login === broadcasterLogin) channel = value;
+          });
+        }
+        return channel;
+      } catch (error) {
+        if (error.response) console.log(error.response);
+        else console.log(error);
       }
-      return channel;
-    } catch (error) {
-      if (error.response) console.log(error.response);
-      else console.log(error);
+    } else {
+      return null;
     }
   }
 }
