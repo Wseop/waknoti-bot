@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  waknotibot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./src:/waknoti-bot/src
+    env_file:
+      - ./.env
+    ports:
+      - 7240:7240
