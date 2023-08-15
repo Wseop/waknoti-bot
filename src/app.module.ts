@@ -4,6 +4,7 @@ import { IntentsBitField } from 'discord.js';
 import { NecordModule } from 'necord';
 import { TwitchModule } from './twitch/twitch.module';
 import { AlarmModule } from './alarm/alarm.module';
+import { WakzooModule } from './wakzoo/wakzoo.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { AlarmModule } from './alarm/alarm.module';
     }),
     TwitchModule,
     AlarmModule,
+    WakzooModule,
   ],
 })
 export class AppModule {}
