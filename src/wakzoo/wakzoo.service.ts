@@ -25,6 +25,7 @@ export class WakzooService {
     const browser = await puppeteer.launch({
       headless: 'new',
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      executablePath: 'google-chrome-stable',
     });
     const page = await browser.newPage();
     await page.goto(this.url);
