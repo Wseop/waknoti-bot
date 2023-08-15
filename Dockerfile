@@ -18,5 +18,4 @@ RUN npm install
 
 COPY . /waknoti-bot
 
-CMD ["google-chrome-stable"]
 CMD npm run start
