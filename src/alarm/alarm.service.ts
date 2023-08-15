@@ -114,11 +114,12 @@ export class AlarmService {
             try {
               // 뱅온 알람
               const embed = new EmbedBuilder()
-                .setTitle(streamInfo.title)
-                .setDescription(streamInfo.gameName)
+                .setTitle('[뱅온]')
+                .setDescription(streamInfo.title)
                 .setFooter({
-                  text: new Date(streamInfo.startedAt).toLocaleString(),
-                });
+                  text: streamInfo.gameName,
+                })
+                .setColor([169, 112, 255]);
 
               await axios.post(member.url, { embeds: [embed] });
               member.isLive = true;
@@ -148,7 +149,7 @@ export class AlarmService {
               const embed = new EmbedBuilder()
                 .setTitle('[왁물원 새글]')
                 .setDescription(article.title)
-                .setFooter({ text: article.date });
+                .setColor([3, 199, 90]);
 
               await axios.post(member.url, { embeds: [embed] });
             } catch (error) {
@@ -179,8 +180,7 @@ export class AlarmService {
               // 트위치 채팅 알람
               const embed = new EmbedBuilder()
                 .setTitle('[트위치 채팅]')
-                .setDescription(chatLog.chat)
-                .setFooter({ text: chatLog.date });
+                .setDescription(chatLog.chat);
 
               await axios.post(member.url, { embeds: [embed] });
             } catch (error) {
