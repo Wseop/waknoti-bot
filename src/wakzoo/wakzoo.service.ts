@@ -23,7 +23,7 @@ export class WakzooService {
   async getMembersArticles(): Promise<Article[]> {
     const articles: Article[] = [];
     const browser = await puppeteer.launch({
-      headless: false,
+      headless: 'new',
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
       executablePath: 'google-chrome-stable',
     });
