@@ -22,7 +22,10 @@ export class WakzooService {
   // 왁물원 최신글 목록에서 members가 작성한 게시글만 가져오기
   async getMembersArticles(): Promise<Article[]> {
     const articles: Article[] = [];
-    const browser = await puppeteer.launch({ headless: 'new' });
+    const browser = await puppeteer.launch({
+      headless: 'new',
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    });
     const page = await browser.newPage();
     await page.goto(this.url);
 
