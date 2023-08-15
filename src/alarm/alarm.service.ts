@@ -11,59 +11,71 @@ export class AlarmService {
   private members = [
     {
       wakzoo: '우왁굳',
-      login: 'woowakgood',
+      broadcasterLogin: 'woowakgood',
+      chatName: '우왁굳',
       url: process.env.URL_WAKGOOD,
       isLive: false,
     },
     {
       wakzoo: '아이네',
-      login: 'vo_ine',
+      broadcasterLogin: 'vo_ine',
+      chatName: '아이네_',
       url: process.env.URL_INE,
       isLive: false,
     },
     {
       wakzoo: '징버거',
-      login: 'jingburger',
+      broadcasterLogin: 'jingburger',
+      chatName: '징버거',
       url: process.env.URL_JINGBURGUR,
       isLive: false,
     },
     {
       wakzoo: '릴파 LILPA',
-      login: 'lilpaaaaaa',
+      broadcasterLogin: 'lilpaaaaaa',
+      chatName: '릴파_',
       url: process.env.URL_LILPA,
       isLive: false,
     },
     {
       wakzoo: '주르르',
-      login: 'cotton__123',
+      broadcasterLogin: 'cotton__123',
+      chatName: '주르르',
       url: process.env.URL_JURURU,
       isLive: false,
     },
     {
       wakzoo: '고세구',
-      login: 'gosegugosegu',
+      broadcasterLogin: 'gosegugosegu',
+      chatName: '고세구___',
       url: process.env.URL_GOSEGU,
       isLive: false,
     },
     {
       wakzoo: '비챤',
-      login: 'viichan6',
+      broadcasterLogin: 'viichan6',
+      chatName: '비챤_',
       url: process.env.URL_VIICHAN,
       isLive: false,
     },
     {
       wakzoo: '-',
-      login: 'sonycast_',
+      broadcasterLogin: 'sonycast_',
+      chatName: '소니쇼',
       url: process.env.URL_SONYCAST,
       isLive: false,
     },
-    // {
-    //   wakzoo: '천양',
-    //   login: 'chunyangkr',
-    //   url: process.env.URL_CHUNYANG,
-    //   isLive: false,
-    // },
   ];
+  private chatLogs = {
+    우왁굳: [],
+    아이네_: [],
+    징버거: [],
+    릴파_: [],
+    주르르: [],
+    고세구___: [],
+    비챤_: [],
+    소니쇼: [],
+  };
 
   constructor(
     private readonly twitchService: TwitchService,
@@ -71,6 +83,7 @@ export class AlarmService {
   ) {
     this.alarmBangon();
     this.alarmWakzooNotice();
+    this.alarmTwitchChat();
   }
 
   private async getStreamInfo(
@@ -94,7 +107,7 @@ export class AlarmService {
 
     setInterval(() => {
       this.members.forEach(async (member) => {
-        const streamInfo = await this.getStreamInfo(member.login);
+        const streamInfo = await this.getStreamInfo(member.broadcasterLogin);
 
         if (streamInfo) {
           if (member.isLive === false) {
@@ -136,6 +149,38 @@ export class AlarmService {
                 .setTitle('[왁물원 새글]')
                 .setDescription(article.title)
                 .setFooter({ text: article.date });
+
+              await axios.post(member.url, { embeds: [embed] });
+            } catch (error) {
+              if (error.response) console.log(error.response.status);
+              else console.log(error);
+            }
+          }
+        });
+      });
+    }, intervalMs);
+  }
+
+  private alarmTwitchChat() {
+    const intervalMs = 1000 * 60;
+
+    setInterval(async () => {
+      this.members.forEach(async (member) => {
+        const chatLogs = await this.twitchService.getChatLogs(
+          member.broadcasterLogin,
+          member.chatName,
+        );
+
+        chatLogs.forEach(async (chatLog) => {
+          if (!this.chatLogs[chatLog.user].includes(chatLog.chat)) {
+            this.chatLogs[chatLog.user].push(chatLog.chat);
+
+            try {
+              // 트위치 채팅 알람
+              const embed = new EmbedBuilder()
+                .setTitle('[트위치 채팅]')
+                .setDescription(chatLog.chat)
+                .setFooter({ text: chatLog.date });
 
               await axios.post(member.url, { embeds: [embed] });
             } catch (error) {

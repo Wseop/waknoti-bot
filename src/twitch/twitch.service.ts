@@ -9,16 +9,6 @@ import { getCurrentDate } from 'src/utils/date';
 @Injectable()
 export class TwitchService {
   private accessToken: string = '';
-  private chatLogs = {
-    woowakgood: [],
-    vo_ine: [],
-    jingburger: [],
-    lilpaaaaaa: [],
-    cotton__123: [],
-    gosegugosegu: [],
-    viichan6: [],
-    sonycast_: [],
-  };
 
   constructor() {
     this.refreshAccessToken();
@@ -103,12 +93,12 @@ export class TwitchService {
       ).text();
 
       // broadcaster가 작성한 채팅만 결과에 추가
-      if (
-        user === chatName &&
-        !this.chatLogs[broadcasterLogin].includes(chat)
-      ) {
-        this.chatLogs[broadcasterLogin].push(chat);
-        result.push({ user, chat, date: await getCurrentDate() });
+      if (user === chatName) {
+        result.push({
+          user,
+          chat,
+          date: await getCurrentDate(),
+        });
       }
     }
 
