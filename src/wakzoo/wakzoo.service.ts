@@ -28,10 +28,10 @@ export class WakzooService {
       executablePath: 'google-chrome-stable',
     });
     const page = await browser.newPage();
-    await page.goto(this.url);
 
     // 전체글보기
     try {
+      await page.goto(this.url);
       await page.waitForSelector('#menuLink0');
       await page.click('#menuLink0');
 
@@ -70,10 +70,9 @@ export class WakzooService {
         }
       }
     } catch (error) {
-      console.log(error);
+      console.log('왁물원 공지 불러오기 실패');
     } finally {
       await browser.close();
-
       return articles;
     }
   }
