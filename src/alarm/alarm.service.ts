@@ -162,34 +162,38 @@ export class AlarmService {
     }, intervalMs);
   }
 
-  private alarmTwitchChat() {
-    const intervalMs = 1000 * 60;
+  private async alarmTwitchChat() {
+    const intervalMs = 1000 * 30;
+    let memberIndex = 0;
 
-    setInterval(async () => {
-      this.members.forEach(async (member) => {
-        const chatLogs = await this.twitchService.getChatLogs(
-          member.broadcasterLogin,
-          member.chatName,
-        );
+    // interval마다 member 1명씩 chat log 가져옴
+    while (true) {
+      const member = this.members[memberIndex++];
+      const chatLogs = await this.twitchService.getChatLogs(
+        member.broadcasterLogin,
+        member.chatName,
+      );
 
-        chatLogs.forEach(async (chatLog) => {
-          if (!this.chatLogs[chatLog.user].includes(chatLog.chat)) {
-            this.chatLogs[chatLog.user].push(chatLog.chat);
+      chatLogs.forEach(async (chatLog) => {
+        if (!this.chatLogs[chatLog.user].includes(chatLog.chat)) {
+          this.chatLogs[chatLog.user].push(chatLog.chat);
 
-            try {
-              // 트위치 채팅 알람
-              const embed = new EmbedBuilder()
-                .setTitle('[트위치 채팅]')
-                .setDescription(chatLog.chat);
+          try {
+            // 트위치 채팅 알람
+            const embed = new EmbedBuilder()
+              .setTitle('[트위치 채팅]')
+              .setDescription(chatLog.chat);
 
-              await axios.post(member.url, { embeds: [embed] });
-            } catch (error) {
-              if (error.response) console.log(error.response.status);
-              else console.log(error);
-            }
+            await axios.post(member.url, { embeds: [embed] });
+          } catch (error) {
+            if (error.response) console.log(error.response.status);
+            else console.log(error);
           }
-        });
+        }
       });
-    }, intervalMs);
+
+      if (memberIndex >= this.members.length) memberIndex = 0;
+      await new Promise((_) => setTimeout(_, intervalMs));
+    }
   }
 }
