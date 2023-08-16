@@ -66,16 +66,6 @@ export class AlarmService {
       isLive: false,
     },
   ];
-  private chatLogs = {
-    우왁굳: [],
-    아이네_: [],
-    징버거: [],
-    릴파_: [],
-    주르르: [],
-    고세구___: [],
-    비챤_: [],
-    소니쇼: [],
-  };
 
   constructor(
     private readonly twitchService: TwitchService,
@@ -163,26 +153,34 @@ export class AlarmService {
   }
 
   private async alarmTwitchChat() {
-    const intervalMs = 1000 * 30;
+    const intervalMs = 1000 * 60;
     let memberIndex = 0;
+
+    // watchChat 등록
+    for (let i = 0; i < this.members.length; i++) {
+      const member = this.members[i];
+      await this.twitchService.watchChat(
+        member.broadcasterLogin,
+        member.chatName,
+      );
+      await new Promise((_) => setTimeout(_, intervalMs));
+    }
 
     // interval마다 member 1명씩 chat log 가져옴
     while (true) {
       const member = this.members[memberIndex++];
-      const chatLogs = await this.twitchService.getChatLogs(
+      const chatLogs = await this.twitchService.getChatLog(
         member.broadcasterLogin,
-        member.chatName,
       );
 
       chatLogs.forEach(async (chatLog) => {
-        if (!this.chatLogs[chatLog.user].includes(chatLog.chat)) {
-          this.chatLogs[chatLog.user].push(chatLog.chat);
-
+        if (chatLog.user && chatLog.chat) {
           try {
             // 트위치 채팅 알람
             const embed = new EmbedBuilder()
               .setTitle('[트위치 채팅]')
-              .setDescription(chatLog.chat);
+              .setDescription(chatLog.chat)
+              .setFooter({ text: chatLog.date });
 
             await axios.post(member.url, { embeds: [embed] });
           } catch (error) {

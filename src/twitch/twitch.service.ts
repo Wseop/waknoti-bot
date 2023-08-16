@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import axios from 'axios';
 import { ChannelInfo } from './interfaces/channel-info.interface';
-import puppeteer from 'puppeteer';
+import puppeteer, { Browser } from 'puppeteer';
 import { load } from 'cheerio';
 import { ChatLog } from './interfaces/chat-log.interface';
 import { getCurrentDate } from 'src/utils/date';
@@ -9,6 +9,9 @@ import { getCurrentDate } from 'src/utils/date';
 @Injectable()
 export class TwitchService {
   private accessToken: string = '';
+  private browser: Browser = null;
+  private pages = {};
+  private chatLogs = {};
 
   constructor() {
     this.refreshAccessToken();
@@ -60,54 +63,72 @@ export class TwitchService {
     }
   }
 
-  // broadcaster의 채팅 내역 가져오기
-  async getChatLogs(
-    broadcasterLogin: string,
-    chatName: string,
-  ): Promise<ChatLog[]> {
-    const result: ChatLog[] = [];
+  async watchChat(broadcasterLogin: string, chatName: string) {
     const url = `https://www.twitch.tv/popout/${broadcasterLogin}/chat`;
-    const browser = await puppeteer.launch({
-      headless: 'new',
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-      executablePath: 'google-chrome-stable',
-    });
-    const page = await browser.newPage();
+    const intervalMs = 1000 * 60;
+
+    // 열린 browser가 없으면 새로 launch
+    if (this.browser === null) {
+      this.browser = await puppeteer.launch({
+        headless: 'new',
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+        executablePath: 'google-chrome-stable',
+      });
+    }
+
+    this.pages[broadcasterLogin] = await this.browser.newPage();
+    this.chatLogs[broadcasterLogin] = [];
 
     try {
-      await page.goto(url);
-      // 사이트 로딩 대기
-      await new Promise((_) => setTimeout(_, 5000));
+      await this.pages[broadcasterLogin].goto(url);
 
-      // 채팅 로그 parsing
-      const $ = load(await page.content());
-      const $chats = $(
-        '#root > div > div.Layout-sc-1xcs6mc-0.htmBdw > div > div > section > div > div.Layout-sc-1xcs6mc-0.InjectLayout-sc-1i43xsx-0.chat-list--default.dvjzkE.font-scale--default > div.Layout-sc-1xcs6mc-0.InjectLayout-sc-1i43xsx-0.iUUpIE > div.scrollable-area > div.simplebar-scroll-content > div > div',
-      );
-      const chatCount = $chats.find('.chat-line__message').length;
+      console.log(`start watch chat - ${url}`);
 
-      for (let i = 1; i <= chatCount; i++) {
-        const user = $(
-          `#root > div > div.Layout-sc-1xcs6mc-0.htmBdw > div > div > section > div > div.Layout-sc-1xcs6mc-0.InjectLayout-sc-1i43xsx-0.chat-list--default.dvjzkE.font-scale--default > div.Layout-sc-1xcs6mc-0.InjectLayout-sc-1i43xsx-0.iUUpIE > div.scrollable-area > div.simplebar-scroll-content > div > div > div:nth-child(${i}) > div > div.Layout-sc-1xcs6mc-0.bZVrjx.chat-line__message-container > div > div > div > span.chat-line__username > span > span.chat-author__display-name`,
-        ).text();
-        const chat = $(
-          `#root > div > div.Layout-sc-1xcs6mc-0.htmBdw > div > div > section > div > div.Layout-sc-1xcs6mc-0.InjectLayout-sc-1i43xsx-0.chat-list--default.dvjzkE.font-scale--default > div.Layout-sc-1xcs6mc-0.InjectLayout-sc-1i43xsx-0.iUUpIE > div.scrollable-area > div.simplebar-scroll-content > div > div > div:nth-child(${i}) > div > div.Layout-sc-1xcs6mc-0.bZVrjx.chat-line__message-container > div > div > span:nth-child(3) > span`,
-        ).text();
+      // intervalMs마다 채팅 로그 업데이트
+      setInterval(async () => {
+        // 채팅 로그 parsing
+        const $ = load(await this.pages[broadcasterLogin].content());
+        const $chats = $(
+          '#root > div > div.Layout-sc-1xcs6mc-0.htmBdw > div > div > section > div > div.Layout-sc-1xcs6mc-0.InjectLayout-sc-1i43xsx-0.chat-list--default.dvjzkE.font-scale--default > div.Layout-sc-1xcs6mc-0.InjectLayout-sc-1i43xsx-0.iUUpIE > div.scrollable-area > div.simplebar-scroll-content > div > div',
+        );
+        const chatCount = $chats.find('.chat-line__message').length;
 
-        // broadcaster가 작성한 채팅만 결과에 추가
-        if (user === chatName) {
-          result.push({
-            user,
-            chat,
-            date: await getCurrentDate(),
-          });
+        for (let i = 1; i <= chatCount; i++) {
+          const user = $(
+            `#root > div > div.Layout-sc-1xcs6mc-0.htmBdw > div > div > section > div > div.Layout-sc-1xcs6mc-0.InjectLayout-sc-1i43xsx-0.chat-list--default.dvjzkE.font-scale--default > div.Layout-sc-1xcs6mc-0.InjectLayout-sc-1i43xsx-0.iUUpIE > div.scrollable-area > div.simplebar-scroll-content > div > div > div:nth-child(${i}) > div > div.Layout-sc-1xcs6mc-0.bZVrjx.chat-line__message-container > div > div > div > span.chat-line__username > span > span.chat-author__display-name`,
+          ).text();
+          const chat = $(
+            `#root > div > div.Layout-sc-1xcs6mc-0.htmBdw > div > div > section > div > div.Layout-sc-1xcs6mc-0.InjectLayout-sc-1i43xsx-0.chat-list--default.dvjzkE.font-scale--default > div.Layout-sc-1xcs6mc-0.InjectLayout-sc-1i43xsx-0.iUUpIE > div.scrollable-area > div.simplebar-scroll-content > div > div > div:nth-child(${i}) > div > div.Layout-sc-1xcs6mc-0.bZVrjx.chat-line__message-container > div > div > span:nth-child(3) > span`,
+          ).text();
+
+          // broadcaster의 채팅 로그 기록
+          if (
+            user === chatName &&
+            !this.chatLogs[broadcasterLogin].includes(chat)
+          ) {
+            this.chatLogs[broadcasterLogin].push({
+              user,
+              chat,
+              date: await getCurrentDate(),
+            });
+          }
         }
-      }
+      }, intervalMs);
     } catch (error) {
-      console.log(`채팅 로그 불러오기 실패 - ${url}`);
-    } finally {
-      await browser.close();
-      return result;
+      await this.pages[broadcasterLogin].close();
+      this.pages[broadcasterLogin] = null;
+      this.chatLogs[broadcasterLogin] = null;
+      console.log(`watchChat failed - ${url}`);
     }
+  }
+
+  async getChatLog(broadcasterLogin: string): Promise<ChatLog[]> {
+    // 채팅 로그 복사 후 refresh
+    const chatLogs = [...this.chatLogs[broadcasterLogin]];
+
+    this.chatLogs[broadcasterLogin] = [];
+    this.pages[broadcasterLogin].reload();
+
+    return chatLogs;
   }
 }
