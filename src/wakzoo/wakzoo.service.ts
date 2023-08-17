@@ -31,7 +31,7 @@ export class WakzooService {
 
     // 전체글보기
     try {
-      await page.goto(this.url);
+      await page.goto(this.url, { timeout: 0 });
       await page.waitForSelector('#menuLink0');
       await page.click('#menuLink0');
 

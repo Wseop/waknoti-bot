@@ -84,7 +84,7 @@ export class TwitchService {
     this.postUrl[broadcasterLogin] = postUrl;
 
     try {
-      await this.pages[broadcasterLogin].goto(url);
+      await this.pages[broadcasterLogin].goto(url, { timeout: 0 });
 
       console.log(`start watch chat - ${broadcasterLogin}`);
 
@@ -134,7 +134,7 @@ export class TwitchService {
 
         if (embeds.length > 0) {
           await axios.post(this.postUrl[broadcasterLogin], { embeds });
-          await this.pages[broadcasterLogin].reload();
+          await this.pages[broadcasterLogin].reload({ timeout: 0 });
         }
       }, intervalMs);
     } catch (error) {
