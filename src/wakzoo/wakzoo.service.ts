@@ -26,6 +26,7 @@ export class WakzooService {
       headless: 'new',
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
       executablePath: 'google-chrome-stable',
+      timeout: 0,
     });
     const page = await browser.newPage();
 
