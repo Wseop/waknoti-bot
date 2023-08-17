@@ -3,8 +3,8 @@ import axios from 'axios';
 import { ChannelInfo } from './interfaces/channel-info.interface';
 import puppeteer, { Browser } from 'puppeteer';
 import { load } from 'cheerio';
-import { ChatLog } from './interfaces/chat-log.interface';
 import { getCurrentDate } from 'src/utils/date';
+import { EmbedBuilder } from 'discord.js';
 
 @Injectable()
 export class TwitchService {
@@ -12,6 +12,8 @@ export class TwitchService {
   private browser: Browser = null;
   private pages = {};
   private chatLogs = {};
+  private postUrl = {};
+  private chatInterval = {};
 
   constructor() {
     this.refreshAccessToken();
@@ -63,7 +65,7 @@ export class TwitchService {
     }
   }
 
-  async watchChat(broadcasterLogin: string, chatName: string) {
+  async watchChat(broadcasterLogin: string, chatName: string, postUrl: string) {
     const url = `https://www.twitch.tv/popout/${broadcasterLogin}/chat`;
     const intervalMs = 1000 * 60;
 
@@ -76,33 +78,37 @@ export class TwitchService {
       });
     }
 
+    // 지켜볼 chat 정보 등록
     this.pages[broadcasterLogin] = await this.browser.newPage();
     this.chatLogs[broadcasterLogin] = [];
+    this.postUrl[broadcasterLogin] = postUrl;
 
     try {
       await this.pages[broadcasterLogin].goto(url);
 
-      console.log(`start watch chat - ${url}`);
+      console.log(`start watch chat - ${broadcasterLogin}`);
 
-      // intervalMs마다 채팅 로그 업데이트
-      setInterval(async () => {
-        // 채팅 로그 parsing
+      this.chatInterval[broadcasterLogin] = setInterval(async () => {
         const $ = load(await this.pages[broadcasterLogin].content());
         const $chats = $(
           '#root > div > div.Layout-sc-1xcs6mc-0.htmBdw > div > div > section > div > div.Layout-sc-1xcs6mc-0.InjectLayout-sc-1i43xsx-0.chat-list--default.dvjzkE.font-scale--default > div.Layout-sc-1xcs6mc-0.InjectLayout-sc-1i43xsx-0.iUUpIE > div.scrollable-area > div.simplebar-scroll-content > div > div',
         );
         const chatCount = $chats.find('.chat-line__message').length;
+        const embeds: EmbedBuilder[] = [];
 
+        // chat log 기록
         for (let i = 1; i <= chatCount; i++) {
           const user = $(
             `#root > div > div.Layout-sc-1xcs6mc-0.htmBdw > div > div > section > div > div.Layout-sc-1xcs6mc-0.InjectLayout-sc-1i43xsx-0.chat-list--default.dvjzkE.font-scale--default > div.Layout-sc-1xcs6mc-0.InjectLayout-sc-1i43xsx-0.iUUpIE > div.scrollable-area > div.simplebar-scroll-content > div > div > div:nth-child(${i}) > div > div.Layout-sc-1xcs6mc-0.bZVrjx.chat-line__message-container > div > div > div > span.chat-line__username > span > span.chat-author__display-name`,
           ).text();
           const chat = $(
             `#root > div > div.Layout-sc-1xcs6mc-0.htmBdw > div > div > section > div > div.Layout-sc-1xcs6mc-0.InjectLayout-sc-1i43xsx-0.chat-list--default.dvjzkE.font-scale--default > div.Layout-sc-1xcs6mc-0.InjectLayout-sc-1i43xsx-0.iUUpIE > div.scrollable-area > div.simplebar-scroll-content > div > div > div:nth-child(${i}) > div > div.Layout-sc-1xcs6mc-0.bZVrjx.chat-line__message-container > div > div > span:nth-child(3) > span`,
-          ).text();
+          )
+            .text()
+            .trim();
 
-          // broadcaster의 채팅 로그 기록
           if (
+            chat &&
             user === chatName &&
             !this.chatLogs[broadcasterLogin].includes(chat)
           ) {
@@ -113,6 +119,23 @@ export class TwitchService {
             });
           }
         }
+
+        // chat log 전송
+        for (
+          let i = 0;
+          i < 25 && i < this.chatLogs[broadcasterLogin].length;
+          i++
+        ) {
+          const embed = new EmbedBuilder()
+            .setTitle('[트위치 채팅]')
+            .setDescription(this.chatLogs[broadcasterLogin].shift().chat);
+          embeds.push(embed);
+        }
+
+        if (embeds.length > 0) {
+          await axios.post(this.postUrl[broadcasterLogin], { embeds });
+          await this.pages[broadcasterLogin].reload();
+        }
       }, intervalMs);
     } catch (error) {
       await this.pages[broadcasterLogin].close();
@@ -120,15 +143,5 @@ export class TwitchService {
       this.chatLogs[broadcasterLogin] = null;
       console.log(`watchChat failed - ${url}`);
     }
-  }
-
-  async getChatLog(broadcasterLogin: string): Promise<ChatLog[]> {
-    // 채팅 로그 복사 후 refresh
-    const chatLogs = [...this.chatLogs[broadcasterLogin]];
-
-    this.chatLogs[broadcasterLogin] = [];
-    this.pages[broadcasterLogin].reload();
-
-    return chatLogs;
   }
 }

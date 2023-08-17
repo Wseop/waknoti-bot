@@ -154,7 +154,6 @@ export class AlarmService {
 
   private async alarmTwitchChat() {
     const intervalMs = 1000 * 60;
-    let memberIndex = 0;
 
     // watchChat 등록
     for (let i = 0; i < this.members.length; i++) {
@@ -162,35 +161,8 @@ export class AlarmService {
       await this.twitchService.watchChat(
         member.broadcasterLogin,
         member.chatName,
+        member.url,
       );
-      await new Promise((_) => setTimeout(_, intervalMs));
-    }
-
-    // interval마다 member 1명씩 chat log 가져옴
-    while (true) {
-      const member = this.members[memberIndex++];
-      const chatLogs = await this.twitchService.getChatLog(
-        member.broadcasterLogin,
-      );
-
-      chatLogs.forEach(async (chatLog) => {
-        if (chatLog.user && chatLog.chat) {
-          try {
-            // 트위치 채팅 알람
-            const embed = new EmbedBuilder()
-              .setTitle('[트위치 채팅]')
-              .setDescription(chatLog.chat)
-              .setFooter({ text: chatLog.date });
-
-            await axios.post(member.url, { embeds: [embed] });
-          } catch (error) {
-            if (error.response) console.log(error.response.status);
-            else console.log(error);
-          }
-        }
-      });
-
-      if (memberIndex >= this.members.length) memberIndex = 0;
       await new Promise((_) => setTimeout(_, intervalMs));
     }
   }
