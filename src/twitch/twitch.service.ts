@@ -69,6 +69,8 @@ export class TwitchService {
     const url = `https://www.twitch.tv/popout/${broadcasterLogin}/chat`;
     const intervalMs = 1000 * 60;
 
+    if (this.chatInterval[broadcasterLogin]) return;
+
     // 열린 browser가 없으면 새로 launch
     if (this.browser === null) {
       this.browser = await puppeteer.launch({
@@ -79,12 +81,13 @@ export class TwitchService {
     }
 
     // 지켜볼 chat 정보 등록
-    this.pages[broadcasterLogin] = await this.browser.newPage();
+    if (!this.pages[broadcasterLogin])
+      this.pages[broadcasterLogin] = await this.browser.newPage();
     this.chatLogs[broadcasterLogin] = [];
     this.postUrl[broadcasterLogin] = postUrl;
 
     try {
-      await this.pages[broadcasterLogin].goto(url, { timeout: 0 });
+      await this.pages[broadcasterLogin].goto(url);
 
       console.log(`start watch chat - ${broadcasterLogin}`);
 
@@ -134,7 +137,7 @@ export class TwitchService {
 
         if (embeds.length > 0) {
           await axios.post(this.postUrl[broadcasterLogin], { embeds });
-          await this.pages[broadcasterLogin].reload({ timeout: 0 });
+          await this.pages[broadcasterLogin].reload();
         }
       }, intervalMs);
     } catch (error) {
@@ -143,5 +146,15 @@ export class TwitchService {
       this.chatLogs[broadcasterLogin] = null;
       console.log(`watchChat failed - ${url}`);
     }
+  }
+
+  async stopWatchChat(broadcasterLogin: string) {
+    if (this.pages[broadcasterLogin])
+      await this.pages[broadcasterLogin].close();
+    this.pages[broadcasterLogin] = null;
+
+    if (this.chatInterval[broadcasterLogin])
+      clearInterval(this.chatInterval[broadcasterLogin]);
+    this.chatInterval[broadcasterLogin] = null;
   }
 }

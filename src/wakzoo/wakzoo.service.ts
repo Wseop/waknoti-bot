@@ -26,13 +26,12 @@ export class WakzooService {
       headless: 'new',
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
       executablePath: 'google-chrome-stable',
-      timeout: 0,
     });
     const page = await browser.newPage();
 
     // 전체글보기
     try {
-      await page.goto(this.url, { timeout: 0 });
+      await page.goto(this.url);
       await page.waitForSelector('#menuLink0');
       await page.click('#menuLink0');
 

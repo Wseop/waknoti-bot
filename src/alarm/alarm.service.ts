@@ -93,7 +93,7 @@ export class AlarmService {
   }
 
   private alarmBangon() {
-    const intervalMs = 1000 * 60;
+    const intervalMs = 1000 * 30;
 
     setInterval(() => {
       this.members.forEach(async (member) => {
@@ -154,16 +154,22 @@ export class AlarmService {
 
   private async alarmTwitchChat() {
     const intervalMs = 1000 * 60;
+    let memberIndex = 0;
 
-    // watchChat 등록
-    for (let i = 0; i < this.members.length; i++) {
-      const member = this.members[i];
-      await this.twitchService.watchChat(
-        member.broadcasterLogin,
-        member.chatName,
-        member.url,
-      );
-      await new Promise((_) => setTimeout(_, intervalMs));
-    }
+    setInterval(async () => {
+      const member = this.members[memberIndex++];
+
+      if (member.isLive) {
+        this.twitchService.stopWatchChat(member.broadcasterLogin);
+      } else {
+        this.twitchService.watchChat(
+          member.broadcasterLogin,
+          member.chatName,
+          member.url,
+        );
+      }
+
+      if (memberIndex >= this.members.length) memberIndex = 0;
+    }, intervalMs);
   }
 }
