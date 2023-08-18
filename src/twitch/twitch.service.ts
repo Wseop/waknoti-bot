@@ -156,5 +156,7 @@ export class TwitchService {
     if (this.chatInterval[broadcasterLogin])
       clearInterval(this.chatInterval[broadcasterLogin]);
     this.chatInterval[broadcasterLogin] = null;
+
+    console.log(`stop watch chat - ${broadcasterLogin}`);
   }
 }

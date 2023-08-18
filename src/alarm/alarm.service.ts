@@ -113,6 +113,9 @@ export class AlarmService {
 
               await axios.post(member.url, { embeds: [embed] });
               member.isLive = true;
+
+              // 뱅온시 watchChat 중지
+              this.twitchService.stopWatchChat(member.broadcasterLogin);
             } catch (error) {
               if (error.response) console.log(error.response.status);
               else console.log(error);
@@ -159,9 +162,8 @@ export class AlarmService {
     setInterval(async () => {
       const member = this.members[memberIndex++];
 
-      if (member.isLive) {
-        this.twitchService.stopWatchChat(member.broadcasterLogin);
-      } else {
+      // 방송중이 아닐때만 watchChat
+      if (!member.isLive) {
         this.twitchService.watchChat(
           member.broadcasterLogin,
           member.chatName,
