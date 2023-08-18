@@ -39,7 +39,7 @@ export class TwitchService {
 
   // 채널 정보 검색
   async searchChannel(broadcasterLogin: string): Promise<ChannelInfo> {
-    const url = `https://api.twitch.tv/helix/search/channels?query=${broadcasterLogin}&live_only=true`;
+    const url = `https://api.twitch.tv/helix/search/channels?query=${broadcasterLogin}&live_only=false`;
 
     if (this.accessToken) {
       let channelInfo: ChannelInfo = null;
