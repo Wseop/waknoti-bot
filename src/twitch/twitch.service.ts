@@ -42,6 +42,8 @@ export class TwitchService {
     const url = `https://api.twitch.tv/helix/search/channels?query=${broadcasterLogin}&live_only=true`;
 
     if (this.accessToken) {
+      let channelInfo: ChannelInfo = null;
+
       try {
         const result = await axios.get(url, {
           headers: {
@@ -50,16 +52,21 @@ export class TwitchService {
           },
         });
 
-        let channel: ChannelInfo = null;
         if (result?.data?.data?.length > 0) {
-          result.data.data.forEach((value: ChannelInfo) => {
-            if (value.broadcaster_login === broadcasterLogin) channel = value;
-          });
+          for (let i = 0; i < result.data.data.length; i++) {
+            const data: ChannelInfo = result.data.data[i];
+
+            if (data.broadcaster_login === broadcasterLogin) {
+              channelInfo = data;
+              break;
+            }
+          }
         }
-        return channel;
       } catch (error) {
         if (error.response) console.log(error.response);
         else console.log(error);
+      } finally {
+        return channelInfo;
       }
     } else {
       return null;
@@ -68,7 +75,7 @@ export class TwitchService {
 
   async watchChat(broadcasterLogin: string, chatName: string, postUrl: string) {
     const url = `https://www.twitch.tv/popout/${broadcasterLogin}/chat`;
-    const intervalMs = 1000 * 60;
+    const intervalMs = 1000 * 60 * 5;
 
     if (this.chatInterval[broadcasterLogin]) return;
 
@@ -81,7 +88,7 @@ export class TwitchService {
       });
     }
 
-    // 지켜볼 chat 정보 등록
+    // broadcaster 정보 등록
     if (!this.pages[broadcasterLogin])
       this.pages[broadcasterLogin] = await this.browser.newPage();
     this.chatLogs[broadcasterLogin] = [];
@@ -92,7 +99,9 @@ export class TwitchService {
 
       console.log(`start watch chat - ${broadcasterLogin}`);
 
+      // start
       this.chatInterval[broadcasterLogin] = setInterval(async () => {
+        // load chat page
         const $ = load(await this.pages[broadcasterLogin].content());
         const $chats = $(
           '#root > div > div.Layout-sc-1xcs6mc-0.htmBdw > div > div > section > div > div.Layout-sc-1xcs6mc-0.InjectLayout-sc-1i43xsx-0.chat-list--default.dvjzkE.font-scale--default > div.Layout-sc-1xcs6mc-0.InjectLayout-sc-1i43xsx-0.iUUpIE > div.scrollable-area > div.simplebar-scroll-content > div > div',
@@ -133,6 +142,7 @@ export class TwitchService {
           i++
         ) {
           const chatLog: ChatLog = this.chatLogs[broadcasterLogin].shift();
+
           embed.addFields({ name: chatLog.date, value: chatLog.chat });
           send = true;
         }
@@ -154,6 +164,7 @@ export class TwitchService {
       await this.pages[broadcasterLogin].close();
       this.pages[broadcasterLogin] = null;
       this.chatLogs[broadcasterLogin] = null;
+
       console.log(`watchChat failed - ${url}`);
     }
   }
