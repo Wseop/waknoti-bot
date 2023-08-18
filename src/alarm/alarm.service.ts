@@ -81,7 +81,7 @@ export class AlarmService {
   ): Promise<{ title: string; gameName: string; startedAt: string }> {
     const result: ChannelInfo = await this.twitchService.searchChannel(login);
 
-    if (result) {
+    if (result.is_live) {
       return {
         title: result.title,
         gameName: result.game_name,
