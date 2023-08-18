@@ -138,8 +138,16 @@ export class TwitchService {
         }
 
         if (send) {
-          await axios.post(this.postUrl[broadcasterLogin], { embeds: [embed] });
-          await this.pages[broadcasterLogin].reload();
+          try {
+            await axios.post(this.postUrl[broadcasterLogin], {
+              embeds: [embed],
+            });
+          } catch (error) {
+            if (error.response) console.log(error.response.status);
+            else console.log(error);
+          } finally {
+            await this.pages[broadcasterLogin].reload();
+          }
         }
       }, intervalMs);
     } catch (error) {
