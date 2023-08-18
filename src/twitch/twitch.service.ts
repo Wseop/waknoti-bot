@@ -5,6 +5,7 @@ import puppeteer, { Browser } from 'puppeteer';
 import { load } from 'cheerio';
 import { getCurrentDate } from 'src/utils/date';
 import { EmbedBuilder } from 'discord.js';
+import { ChatLog } from './interfaces/chat-log.interface';
 
 @Injectable()
 export class TwitchService {
@@ -97,7 +98,6 @@ export class TwitchService {
           '#root > div > div.Layout-sc-1xcs6mc-0.htmBdw > div > div > section > div > div.Layout-sc-1xcs6mc-0.InjectLayout-sc-1i43xsx-0.chat-list--default.dvjzkE.font-scale--default > div.Layout-sc-1xcs6mc-0.InjectLayout-sc-1i43xsx-0.iUUpIE > div.scrollable-area > div.simplebar-scroll-content > div > div',
         );
         const chatCount = $chats.find('.chat-line__message').length;
-        const embeds: EmbedBuilder[] = [];
 
         // chat log 기록
         for (let i = 1; i <= chatCount; i++) {
@@ -124,19 +124,21 @@ export class TwitchService {
         }
 
         // chat log 전송
+        let send = false;
+        const embed = new EmbedBuilder().setTitle('[트위치 채팅]');
+
         for (
           let i = 0;
-          i < 25 && i < this.chatLogs[broadcasterLogin].length;
+          i < 25 && this.chatLogs[broadcasterLogin].length > 0;
           i++
         ) {
-          const embed = new EmbedBuilder()
-            .setTitle('[트위치 채팅]')
-            .setDescription(this.chatLogs[broadcasterLogin].shift().chat);
-          embeds.push(embed);
+          const chatLog: ChatLog = this.chatLogs[broadcasterLogin].shift();
+          embed.addFields({ name: chatLog.date, value: chatLog.chat });
+          send = true;
         }
 
-        if (embeds.length > 0) {
-          await axios.post(this.postUrl[broadcasterLogin], { embeds });
+        if (send) {
+          await axios.post(this.postUrl[broadcasterLogin], { embeds: [embed] });
           await this.pages[broadcasterLogin].reload();
         }
       }, intervalMs);
