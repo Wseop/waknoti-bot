@@ -35,7 +35,7 @@ export class BrowserService {
     page.on('request', (req: HTTPRequest) => {
       if (
         req.resourceType() === 'image' ||
-        req.resourceType() === 'stylesheet' ||
+        //req.resourceType() === 'stylesheet' ||
         req.resourceType() === 'font'
       ) {
         req.abort();
