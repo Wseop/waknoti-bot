@@ -17,9 +17,7 @@ export class WakzooService {
   ];
   private articleIds: string[] = [];
 
-  constructor(private readonly browserService: BrowserService) {
-    this.getMembersArticles();
-  }
+  constructor(private readonly browserService: BrowserService) {}
 
   // 왁물원 최신글 목록에서 members가 작성한 게시글만 가져오기
   async getMembersArticles(): Promise<Article[]> {
