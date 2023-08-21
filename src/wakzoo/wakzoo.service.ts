@@ -6,21 +6,12 @@ import { BrowserService } from 'src/browser/browser.service';
 @Injectable()
 export class WakzooService {
   private url = 'https://cafe.naver.com/steamindiegame';
-  private members = [
-    '우왁굳',
-    '아이네',
-    '징버거',
-    '릴파 LILPA',
-    '주르르',
-    '고세구',
-    '비챤',
-  ];
   private articleIds: string[] = [];
 
   constructor(private readonly browserService: BrowserService) {}
 
   // 왁물원 최신글 목록에서 members가 작성한 게시글만 가져오기
-  async getMembersArticles(): Promise<Article[]> {
+  async getMembersArticles(members: string[]): Promise<Article[]> {
     const articles: Article[] = [];
     const page = await this.browserService.newPage();
 
@@ -54,10 +45,7 @@ export class WakzooService {
           articleHref.indexOf('&', articleIdIndex),
         );
 
-        if (
-          this.members.includes(writer) &&
-          !this.articleIds.includes(articleId)
-        ) {
+        if (members.includes(writer) && !this.articleIds.includes(articleId)) {
           this.articleIds.push(articleId);
           articles.push({ writer, title, date });
         }
