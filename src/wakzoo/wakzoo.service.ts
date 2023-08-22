@@ -1,41 +1,25 @@
 import { Injectable } from '@nestjs/common';
 import { load } from 'cheerio';
-import puppeteer from 'puppeteer';
 import { Article } from './interfaces/article.interface';
+import { BrowserService } from 'src/browser/browser.service';
 
 @Injectable()
 export class WakzooService {
   private url = 'https://cafe.naver.com/steamindiegame';
-  private members = [
-    '우왁굳',
-    '아이네',
-    '징버거',
-    '릴파 LILPA',
-    '주르르',
-    '고세구',
-    '비챤',
-  ];
   private articleIds: string[] = [];
 
-  constructor() {}
+  constructor(private readonly browserService: BrowserService) {}
 
   // 왁물원 최신글 목록에서 members가 작성한 게시글만 가져오기
-  async getMembersArticles(): Promise<Article[]> {
+  async getMembersArticles(members: string[]): Promise<Article[]> {
     const articles: Article[] = [];
-    const browser = await puppeteer.launch({
-      headless: 'new',
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-      executablePath: 'google-chrome-stable',
-    });
-    const page = await browser.newPage();
+    const page = await this.browserService.newPage();
 
     // 전체글보기
     try {
       await page.goto(this.url);
       await page.waitForSelector('#menuLink0');
       await page.click('#menuLink0');
-
-      // 사이트 로딩 대기
       await new Promise((_) => setTimeout(_, 3000));
 
       const cafeMainFrame = await (await page.$('#cafe_main')).contentFrame();
@@ -61,18 +45,16 @@ export class WakzooService {
           articleHref.indexOf('&', articleIdIndex),
         );
 
-        if (
-          this.members.includes(writer) &&
-          !this.articleIds.includes(articleId)
-        ) {
+        if (members.includes(writer) && !this.articleIds.includes(articleId)) {
           this.articleIds.push(articleId);
           articles.push({ writer, title, date });
         }
       }
     } catch (error) {
-      console.log('왁물원 공지 불러오기 실패');
+      console.log('getMembersArticles failed');
     } finally {
-      await browser.close();
+      await page.close();
+
       return articles;
     }
   }
