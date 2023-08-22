@@ -5,12 +5,13 @@ import { Page } from 'puppeteer';
 import { load } from 'cheerio';
 import { getCurrentDate } from 'src/utils/date';
 import { ChatLog } from './interfaces/chat-log.interface';
+import { BrowserService } from 'src/browser/browser.service';
 
 @Injectable()
 export class TwitchService {
   private accessToken: string = '';
 
-  constructor() {
+  constructor(private readonly browserService: BrowserService) {
     this.refreshAccessToken();
   }
 
@@ -65,6 +66,12 @@ export class TwitchService {
     } else {
       return null;
     }
+  }
+
+  async openTwitchChat(broadcasterLogin: string): Promise<Page> {
+    const page = await this.browserService.newPage();
+    await page.goto(`https://www.twitch.tv/popout/${broadcasterLogin}/chat`);
+    return page;
   }
 
   async getChatLog(page: Page, chatName: string): Promise<ChatLog[]> {
