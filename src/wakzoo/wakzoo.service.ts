@@ -47,7 +47,7 @@ export class WakzooService {
 
         if (members.includes(writer) && !this.articleIds.includes(articleId)) {
           this.articleIds.push(articleId);
-          articles.push({ writer, title, date });
+          articles.push({ writer, title, articleId });
         }
       }
     } catch (error) {
