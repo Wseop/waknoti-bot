@@ -119,6 +119,7 @@ export class AppService {
         if (!member.isLive) {
           const embed = new EmbedBuilder()
             .setTitle('[뱅온!]')
+            .setURL(`https://www.twitch.tv/${member.broadcasterLogin}`)
             .setDescription(channelInfo.title)
             .setFooter({ text: channelInfo.game_name })
             .setColor([169, 122, 255]);
