@@ -3,8 +3,8 @@ import { ConfigModule } from '@nestjs/config';
 import { IntentsBitField } from 'discord.js';
 import { NecordModule } from 'necord';
 import { TwitchModule } from './twitch/twitch.module';
-import { AlarmModule } from './alarm/alarm.module';
 import { WakzooModule } from './wakzoo/wakzoo.module';
+import { AppService } from './app.service';
 
 @Module({
   imports: [
@@ -18,8 +18,8 @@ import { WakzooModule } from './wakzoo/wakzoo.module';
       development: [process.env.GUILD_ID],
     }),
     TwitchModule,
-    AlarmModule,
     WakzooModule,
   ],
+  providers: [AppService],
 })
 export class AppModule {}
