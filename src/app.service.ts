@@ -162,7 +162,7 @@ export class AppService {
       const embed = new EmbedBuilder()
         .setTitle('[왁물원 공지!]')
         .setDescription(article.title)
-        .setURL(`https://cafe.naver.com/steamindiegame${article.articleId}`)
+        .setURL(`https://cafe.naver.com/steamindiegame/${article.articleId}`)
         .setColor([3, 199, 90]);
       const member: Member = this.members.find((member: Member) => {
         return member.wakzoo === article.writer;
