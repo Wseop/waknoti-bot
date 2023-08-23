@@ -2,12 +2,16 @@ import { Controller, Get, Param } from '@nestjs/common';
 import { TwitchService } from './twitch.service';
 import { StatusDto } from './dtos/status.dto';
 import { ChannelInfo } from './interfaces/channel-info.interface';
+import { ApiOkResponse, ApiParam, ApiTags } from '@nestjs/swagger';
 
 @Controller('twitch')
+@ApiTags('[Twitch]')
 export class TwitchController {
   constructor(private readonly twitchService: TwitchService) {}
 
   @Get('/status/:broadcaster')
+  @ApiParam({ name: 'broadcaster', example: 'woowakgood', required: true })
+  @ApiOkResponse({ type: StatusDto })
   async getStatus(
     @Param('broadcaster') broadcaster: string,
   ): Promise<StatusDto> {
