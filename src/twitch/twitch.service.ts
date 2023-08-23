@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import axios from 'axios';
 import { ChannelInfo } from './interfaces/channel-info.interface';
 import { Page } from 'puppeteer';
@@ -10,6 +10,7 @@ import { BrowserService } from 'src/browser/browser.service';
 @Injectable()
 export class TwitchService {
   private accessToken: string = '';
+  private readonly logger = new Logger(TwitchService.name);
 
   constructor(private readonly browserService: BrowserService) {
     this.refreshAccessToken();
@@ -27,8 +28,9 @@ export class TwitchService {
         this.refreshAccessToken();
       }, result.data.expires_in - 1000);
     } catch (error) {
-      if (error.response) console.log(error.response);
-      else console.log(error);
+      if (error.response) this.logger.error(error.response.status);
+      else if (error.request) this.logger.error(error.request);
+      else this.logger.error(error.message);
     }
   }
 
@@ -58,8 +60,9 @@ export class TwitchService {
           }
         }
       } catch (error) {
-        if (error.response) console.log(error.response);
-        else console.log(error);
+        if (error.response) this.logger.error(error.response.status);
+        else if (error.request) this.logger.error(error.request);
+        else this.logger.error(error.message);
       } finally {
         return channelInfo;
       }

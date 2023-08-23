@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { TwitchService } from './twitch/twitch.service';
 import { ChannelInfo } from './twitch/interfaces/channel-info.interface';
 import { EmbedBuilder } from 'discord.js';
@@ -88,6 +88,7 @@ export class AppService {
   private bangOnInterval = 1000 * 30;
   private wakzooInterval = 1000 * 60;
   private chatInterval = 1000 * 60 * 3;
+  private readonly logger = new Logger(AppService.name);
 
   constructor(
     private readonly twitchService: TwitchService,
@@ -134,8 +135,9 @@ export class AppService {
               member.twitchChat = null;
             }
           } catch (error) {
-            if (error.response) console.log(error.response.status);
-            else console.log(error);
+            if (error.response) this.logger.error(error.response.status);
+            else if (error.request) this.logger.error(error.request);
+            else this.logger.error(error.message);
           }
         }
       } else {
@@ -173,8 +175,9 @@ export class AppService {
         try {
           axios.post(member.url, { embeds: [embed] });
         } catch (error) {
-          if (error.response) console.log(error.response.status);
-          else console.log(error);
+          if (error.response) this.logger.error(error.response.status);
+          else if (error.request) this.logger.error(error.request);
+          else this.logger.error(error.message);
         }
       }
     });
@@ -201,8 +204,9 @@ export class AppService {
           try {
             await axios.post(member.url, { embeds: [embed] });
           } catch (error) {
-            if (error.response) console.log(error.response.status);
-            else console.log(error);
+            if (error.response) this.logger.error(error.response.status);
+            else if (error.request) this.logger.error(error.request);
+            else this.logger.error(error.message);
           } finally {
             member.twitchChat.reload();
           }

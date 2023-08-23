@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { load } from 'cheerio';
 import { Article } from './interfaces/article.interface';
 import { BrowserService } from 'src/browser/browser.service';
@@ -7,6 +7,7 @@ import { BrowserService } from 'src/browser/browser.service';
 export class WakzooService {
   private url = 'https://cafe.naver.com/steamindiegame';
   private recentArticleId: number = 0;
+  private readonly logger = new Logger(WakzooService.name);
 
   constructor(private readonly browserService: BrowserService) {}
 
@@ -54,7 +55,7 @@ export class WakzooService {
         }
       }
     } catch (error) {
-      console.log('getMembersArticles failed');
+      this.logger.warn('article load fail');
     } finally {
       await page.close();
 
