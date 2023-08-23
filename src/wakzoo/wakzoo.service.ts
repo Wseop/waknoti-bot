@@ -6,7 +6,7 @@ import { BrowserService } from 'src/browser/browser.service';
 @Injectable()
 export class WakzooService {
   private url = 'https://cafe.naver.com/steamindiegame';
-  private articleIds: string[] = [];
+  private recentArticleId: number = 0;
 
   constructor(private readonly browserService: BrowserService) {}
 
@@ -26,7 +26,7 @@ export class WakzooService {
       const $ = load(await cafeMainFrame.content());
 
       // 게시글 parsing
-      for (let i = 1; i <= 15; i++) {
+      for (let i = 15; i > 0; i--) {
         const writer = $(
           `#main-area > div:nth-child(4) > table > tbody > tr:nth-child(${i}) > td.td_name > div > table > tbody > tr > td > a`,
         ).text();
@@ -45,8 +45,11 @@ export class WakzooService {
           articleHref.indexOf('&', articleIdIndex),
         );
 
-        if (members.includes(writer) && !this.articleIds.includes(articleId)) {
-          this.articleIds.push(articleId);
+        if (
+          members.includes(writer) &&
+          this.recentArticleId < Number(articleId)
+        ) {
+          this.recentArticleId = Number(articleId);
           articles.push({ writer, title, articleId });
         }
       }
