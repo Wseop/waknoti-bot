@@ -73,8 +73,14 @@ export class TwitchService {
 
   async openTwitchChat(broadcasterLogin: string): Promise<Page> {
     const page = await this.browserService.newPage();
-    await page.goto(`https://www.twitch.tv/popout/${broadcasterLogin}/chat`);
-    return page;
+
+    try {
+      await page.goto(`https://www.twitch.tv/popout/${broadcasterLogin}/chat`);
+      return page;
+    } catch (error) {
+      this.logger.error(error);
+      return null;
+    }
   }
 
   async getChatLog(page: Page, chatName: string): Promise<ChatLog[]> {
