@@ -160,7 +160,7 @@ export class AppService {
       wakzooNames,
     );
 
-    articles.forEach((article: Article) => {
+    articles.forEach(async (article: Article) => {
       // 왁물원 공지 전송
       const embed = new EmbedBuilder()
         .setTitle('[왁물원 공지!]')
@@ -173,7 +173,7 @@ export class AppService {
 
       if (member) {
         try {
-          axios.post(member.url, { embeds: [embed] });
+          await axios.post(member.url, { embeds: [embed] });
         } catch (error) {
           if (error.response) this.logger.error(error.response.status);
           else if (error.request) this.logger.error(error.request);
