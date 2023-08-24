@@ -78,6 +78,7 @@ export class TwitchService {
       await page.goto(`https://www.twitch.tv/popout/${broadcasterLogin}/chat`);
       return page;
     } catch (error) {
+      await page.close();
       this.logger.error(error);
       return null;
     }
