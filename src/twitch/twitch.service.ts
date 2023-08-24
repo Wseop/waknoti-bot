@@ -71,16 +71,16 @@ export class TwitchService {
     }
   }
 
-  async openTwitchChat(broadcasterLogin: string): Promise<Page> {
-    const page = await this.browserService.newPage();
-
+  async openTwitchChat(page: Page, broadcasterLogin: string): Promise<boolean> {
     try {
-      await page.goto(`https://www.twitch.tv/popout/${broadcasterLogin}/chat`);
-      return page;
+      await page.goto(`https://www.twitch.tv/popout/${broadcasterLogin}/chat`, {
+        timeout: 0,
+      });
+      this.logger.log(`chat open success - ${broadcasterLogin}`);
+      return true;
     } catch (error) {
-      await page.close();
-      this.logger.error(error);
-      return null;
+      this.logger.error(`${error} - ${broadcasterLogin}`);
+      return false;
     }
   }
 

@@ -5,6 +5,7 @@ import { NecordModule } from 'necord';
 import { TwitchModule } from './twitch/twitch.module';
 import { WakzooModule } from './wakzoo/wakzoo.module';
 import { AppService } from './app.service';
+import { BrowserModule } from './browser/browser.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { AppService } from './app.service';
     }),
     TwitchModule,
     WakzooModule,
+    BrowserModule,
   ],
   providers: [AppService],
 })

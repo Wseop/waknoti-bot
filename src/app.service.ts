@@ -7,6 +7,7 @@ import { WakzooService } from './wakzoo/wakzoo.service';
 import { Article } from './wakzoo/interfaces/article.interface';
 import { Page } from 'puppeteer';
 import { ChatLog } from './twitch/interfaces/chat-log.interface';
+import { BrowserService } from './browser/browser.service';
 
 class Member {
   wakzoo: string;
@@ -93,6 +94,7 @@ export class AppService {
   constructor(
     private readonly twitchService: TwitchService,
     private readonly wakzooService: WakzooService,
+    private readonly browserService: BrowserService,
   ) {
     // notiBangOn
     setInterval(() => {
@@ -144,9 +146,16 @@ export class AppService {
         // 방송 종료시 상태 업데이트 및 채팅 모니터링 시작
         member.isLive = false;
         if (!member.twitchChat) {
-          member.twitchChat = await this.twitchService.openTwitchChat(
+          member.twitchChat = await this.browserService.newPage();
+
+          const result = await this.twitchService.openTwitchChat(
+            member.twitchChat,
             member.broadcasterLogin,
           );
+          if (!result) {
+            await member.twitchChat.close();
+            member.twitchChat = null;
+          }
         }
       }
     });
