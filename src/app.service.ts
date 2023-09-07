@@ -107,9 +107,9 @@ export class AppService {
     }, this.wakzooInterval);
 
     // notiTwitchChat
-    setInterval(() => {
-      this.notiTwitchChat();
-    }, this.chatInterval);
+    // setInterval(() => {
+    //   this.notiTwitchChat();
+    // }, this.chatInterval);
   }
 
   private async notiBangOn() {
@@ -132,10 +132,10 @@ export class AppService {
 
             // 방송 시작 시 상태 업데이트 및 채팅 모니터링 종료
             member.isLive = true;
-            if (member.twitchChat) {
-              await member.twitchChat.close();
-              member.twitchChat = null;
-            }
+            // if (member.twitchChat) {
+            //   await member.twitchChat.close();
+            //   member.twitchChat = null;
+            // }
           } catch (error) {
             if (error.response) this.logger.error(error.response.status);
             else if (error.request) this.logger.error(error.request);
@@ -145,18 +145,18 @@ export class AppService {
       } else {
         // 방송 종료시 상태 업데이트 및 채팅 모니터링 시작
         member.isLive = false;
-        if (!member.twitchChat) {
-          member.twitchChat = await this.browserService.newPage();
+        // if (!member.twitchChat) {
+        //   member.twitchChat = await this.browserService.newPage();
 
-          const result = await this.twitchService.openTwitchChat(
-            member.twitchChat,
-            member.broadcasterLogin,
-          );
-          if (!result) {
-            await member.twitchChat.close();
-            member.twitchChat = null;
-          }
-        }
+        //   const result = await this.twitchService.openTwitchChat(
+        //     member.twitchChat,
+        //     member.broadcasterLogin,
+        //   );
+        //   if (!result) {
+        //     await member.twitchChat.close();
+        //     member.twitchChat = null;
+        //   }
+        // }
       }
     });
   }
